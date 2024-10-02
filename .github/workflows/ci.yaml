@@ -1,0 +1,34 @@
+name: Deploy Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Select environment to deploy'
+        required: true
+        default: 'QA'
+        type: choice
+        options:
+          - Fin-UAT
+          - MPOne-Dev
+          - Production
+          - QA
+          - Staging
+          - UAT
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Build Application
+        run: echo "Building application..."
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.environment == 'QA' }} # Condition for QA deployment
+    steps:
+      - name: Deploy to QA
+        run: echo "Deploying to QA..."
