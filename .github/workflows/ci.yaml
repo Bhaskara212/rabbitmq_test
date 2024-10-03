@@ -1,6 +1,12 @@
-name: Deploy Workflow
+name: Build and Deploy Workflow
 
+# Trigger the build job on push
 on:
+  push:
+    branches:
+      - main  # Specify the branch you want to trigger the build on (e.g., main, develop)
+
+  # Manual trigger for deployment
   workflow_dispatch:
     inputs:
       environment:
@@ -9,14 +15,13 @@ on:
         default: 'QA'
         type: choice
         options:
-          - Fin-UAT
-          - MPOne-Dev
-          - Production
+          - TEST
+          - DEV
           - QA
-          - Staging
-          - UAT
+          - PROD
 
 jobs:
+  # Build job triggered automatically on code push
   build:
     runs-on: ubuntu-latest
     steps:
@@ -24,39 +29,28 @@ jobs:
         uses: actions/checkout@v2
       - name: Build Application
         run: echo "Building application..."
+      - name: Save build artifact
+        run: echo "Saving build artifact..."  # Simulate saving the artifact
+        # Optionally add artifact upload step for real build output
 
+  # Deploy job triggered manually via workflow_dispatch
   deploy:
-    needs: build
+    #needs: build
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        environment: [QA, UAT, Staging, Fin-UAT, MPOne-Dev, Production]
-
+    if: ${{ github.event_name == 'workflow_dispatch' }}  # Only run deploy on manual trigger
     steps:
-      - name: Set environment name
-        run: echo "Deploying to ${{ github.event.inputs.environment }} environment..."
-
-      - name: Deploy to QA
-        if: ${{ github.event.inputs.environment == 'QA' }}
-        run: echo "Deploying to QA..."
-
-      - name: Deploy to UAT
-        if: ${{ github.event.inputs.environment == 'UAT' }}
-        run: echo "Deploying to UAT..."
-
-      - name: Deploy to Staging
-        if: ${{ github.event.inputs.environment == 'Staging' }}
-        run: echo "Deploying to Staging..."
-
-      - name: Deploy to Fin-UAT
-        if: ${{ github.event.inputs.environment == 'Fin-UAT' }}
-        run: echo "Deploying to Fin-UAT..."
-
-      - name: Deploy to MPOne-Dev
-        if: ${{ github.event.inputs.environment == 'MPOne-Dev' }}
-        run: echo "Deploying to MPOne-Dev..."
-
-      - name: Deploy to Production
-        if: ${{ github.event.inputs.environment == 'Production' }}
-        run: echo "Deploying to Production..."
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Deploy to selected environment
+        run: |
+          if [ "${{ github.event.inputs.environment }}" == "QA" ]; then
+            echo "Deploying to QA..."
+          elif [ "${{ github.event.inputs.environment }}" == "DEV" ]; then
+            echo "Deploying to DEV..."
+          elif [ "${{ github.event.inputs.environment }}" == "TEST" ]; then
+            echo "Deploying to TEST..."
+          elif [ "${{ github.event.inputs.environment }}" == "PROD" ]; then
+            echo "Deploying to PROD..."
+          else
+            echo "Invalid environment selected!"
+          fi  # closing the if statement  
