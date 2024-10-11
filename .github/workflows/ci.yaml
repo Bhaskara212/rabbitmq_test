@@ -35,12 +35,24 @@ jobs:
       - name: Save build artifact
         run: echo "Saving build artifact..."  # Simulate saving the artifact
         # Optionally add artifact upload step for real build output
+  
 
-  deploy:
+deploy:
     needs: build
     runs-on: ubuntu-latest
-   # if: github.ref != 'refs/heads/main' || github.ref == 'refs/heads/main' || ${{ github.event.inputs.environment == 'QA' }} # Condition for QA deployment
-    if: ${{ github.event.inputs.environment == 'QA' }}
+    strategy:
+      matrix:
+        environment: [QA, Fin-UAT, MPOne-Dev, Staging, UAT, Production]
+
     steps:
-      - name: Deploy to QA
-        run: echo "Deploying to QA..."
+      - name: Deploy to selected environment
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == matrix.environment || (matrix.environment == 'Production' && github.ref == 'refs/heads/main') || (matrix.environment != 'Production' && github.ref == 'refs/heads/' + matrix.environment) }}
+        run: echo "Deploying to ${{ matrix.environment }}..."
+ # deploy:
+  #  needs: build
+  #  runs-on: ubuntu-latest
+   # if: github.ref != 'refs/heads/main' || github.ref == 'refs/heads/main' || ${{ github.event.inputs.environment == 'QA' }} # Condition for QA deployment
+  #  if: ${{ github.event.inputs.environment == 'QA' }}
+  #  steps:
+  #    - name: Deploy to QA
+   #     run: echo "Deploying to QA..."
