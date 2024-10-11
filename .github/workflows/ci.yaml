@@ -39,13 +39,13 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == matrix.environment || github.ref != 'refs/heads/main' }}
     strategy:
       matrix:
         environment: [QA, Fin-UAT, MPOne-Dev, Staging, UAT]
 
     steps:
       - name: Deploy to selected environment
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == matrix.environment || github.ref != 'refs/heads/main' }}
         run: echo "Deploying to ${{ matrix.environment }}..."
 
 
