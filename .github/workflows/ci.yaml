@@ -36,17 +36,57 @@ jobs:
         # Optionally add artifact upload step for real build output
   
 
-  deploy:
+  deploy_QA:
     needs: build
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        environment: [QA, Fin-UAT, MPOne-Dev, Staging, UAT]
-
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'QA' && github.ref == 'refs/heads/main'}} 
     steps:
-      - name: Deploy to selected environment
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == matrix.environment || github.ref != 'refs/heads/main' }}
-        run: echo "Deploying to ${{ matrix.environment }}..."
+      - name: Deploy to QA
+        run: echo "Deploying to QA..."
+
+  # Deployment job for Fin-UAT
+  deploy_FinUAT:
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'Fin-UAT' && github.ref == 'refs/heads/main'}} 
+      - name: Deploy to Fin-UAT
+        run: echo "Deploying to Fin-UAT..."
+
+  # Deployment job for MPOne-Dev
+  deploy_MPOneDev:
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'MPOne-Dev' && github.ref == 'refs/heads/main'}} 
+    steps:
+      - name: Deploy to MPOne-Dev
+        run: echo "Deploying to MPOne-Dev..."
+
+  # Deployment job for Staging
+  deploy_Staging:
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'Staging' && github.ref == 'refs/heads/main'}} 
+    steps:
+      - name: Deploy to Staging
+        run: echo "Deploying to Staging..."
+
+  # Deployment job for UAT
+  deploy_UAT:
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'UAT' && github.ref == 'refs/heads/main'}} 
+    steps:
+      - name: Deploy to UAT
+        run: echo "Deploying to UAT..."
+
+  # Deployment job for Production
+  deploy_Production:
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'Production' && github.ref == 'refs/heads/main'}}
+    steps:
+      - name: Deploy to Production
+        run: echo "Deploying to Production..."
 
 
  # deploy:
