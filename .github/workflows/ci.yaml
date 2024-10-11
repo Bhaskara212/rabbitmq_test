@@ -39,7 +39,8 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref != 'refs/heads/main' || github.ref == 'refs/heads/main' || ${{ github.event.inputs.environment == 'QA' }} # Condition for QA deployment
+   # if: github.ref != 'refs/heads/main' || github.ref == 'refs/heads/main' || ${{ github.event.inputs.environment == 'QA' }} # Condition for QA deployment
+    if: ${{ github.event.inputs.environment == 'QA' }}
     steps:
       - name: Deploy to QA
         run: echo "Deploying to QA..."
