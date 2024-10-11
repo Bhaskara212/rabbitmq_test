@@ -37,7 +37,7 @@ jobs:
         # Optionally add artifact upload step for real build output
   
 
-deploy:
+  deploy:
     needs: build
     runs-on: ubuntu-latest
     strategy:
