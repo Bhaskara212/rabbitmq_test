@@ -40,14 +40,27 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        environment: [QA, Fin-UAT, MPOne-Dev, Staging, UAT, Production]
-
     steps:
-      - name: Deploy to selected environment
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == matrix.environment || (matrix.environment == 'Production' && github.ref == 'refs/heads/main') || (matrix.environment != 'Production' && github.ref == 'refs/heads/' + matrix.environment) }}
-        run: echo "Deploying to ${{ matrix.environment }}..."
+      - name: Deploy to QA
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'QA' || github.ref == 'refs/heads/QA' }}
+        run: echo "Deploying to QA..."
+      - name: Deploy to Fin-UAT
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'Fin-UAT' || github.ref == 'refs/heads/Fin-UAT' }}
+        run: echo "Deploying to Fin-UAT..."
+      - name: Deploy to MPOne-Dev
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'MPOne-Dev' || github.ref == 'refs/heads/MPOne-Dev' }}
+        run: echo "Deploying to MPOne-Dev..."
+      - name: Deploy to Staging
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'Staging' || github.ref == 'refs/heads/Staging' }}
+        run: echo "Deploying to Staging..."
+      - name: Deploy to UAT
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'UAT' || github.ref == 'refs/heads/UAT' }}
+        run: echo "Deploying to UAT..."
+      - name: Deploy to Production
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'Production' || github.ref == 'refs/heads/main' }}
+        run: echo "Deploying to Production..."
+
+        
  # deploy:
   #  needs: build
   #  runs-on: ubuntu-latest
