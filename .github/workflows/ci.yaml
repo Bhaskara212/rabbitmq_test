@@ -48,7 +48,8 @@ jobs:
   deploy_FinUAT:
     needs: build
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'Fin-UAT' && github.ref == 'refs/heads/main'}} 
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'Fin-UAT' && github.ref == 'refs/heads/main'}}
+    steps: 
       - name: Deploy to Fin-UAT
         run: echo "Deploying to Fin-UAT..."
 
