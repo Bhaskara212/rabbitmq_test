@@ -4,9 +4,8 @@ name: Build and Deploy Workflow
 on:
   push:
     branches:
-      - main  # Specify the branch you want to trigger the build on (e.g., main, develop)
-
-  # Manual trigger for deployment
+      - main
+      - feature-**
   workflow_dispatch:
     inputs:
       environment:
@@ -15,14 +14,17 @@ on:
         default: 'QA'
         type: choice
         options:
-          - TEST
-          - DEV
+          - Fin-UAT
+          - MPOne-Dev
           - QA
-          - PROD
+          - Staging
+          - UAT
+  
 
 jobs:
   # Build job triggered automatically on code push
   build:
+    if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -32,25 +34,77 @@ jobs:
       - name: Save build artifact
         run: echo "Saving build artifact..."  # Simulate saving the artifact
         # Optionally add artifact upload step for real build output
-
-  # Deploy job triggered manually via workflow_dispatch
-  deploy:
-    #needs: build
+  
+  build-latest:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' }}  # Only run deploy on manual trigger
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Deploy to selected environment
-        run: |
-          if [ "${{ github.event.inputs.environment }}" == "QA" ]; then
-            echo "Deploying to QA..."
-          elif [ "${{ github.event.inputs.environment }}" == "DEV" ]; then
-            echo "Deploying to DEV..."
-          elif [ "${{ github.event.inputs.environment }}" == "TEST" ]; then
-            echo "Deploying to TEST..."
-          elif [ "${{ github.event.inputs.environment }}" == "PROD" ]; then
-            echo "Deploying to PROD..."
-          else
-            echo "Invalid environment selected!"
-          fi  # closing the if statement  
+      - name: Build Application
+        run: echo "Building application..."
+      - name: Save build artifact
+        run: echo "Saving build artifact..."
+
+  deploy_QA:
+    needs: build-latest
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'QA' && github.ref == 'refs/heads/main'}} 
+    steps:
+      - name: Deploy to QA
+        run: echo "Deploying to QA..."
+
+  # Deployment job for Fin-UAT
+  deploy_FinUAT:
+    needs: build-latest
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'Fin-UAT' && github.ref == 'refs/heads/main'}}
+    steps: 
+      - name: Deploy to Fin-UAT
+        run: echo "Deploying to Fin-UAT..."
+
+  # Deployment job for MPOne-Dev
+  deploy_MPOneDev:
+    needs: build-latest
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'MPOne-Dev' && github.ref == 'refs/heads/main'}} 
+    steps:
+      - name: Deploy to MPOne-Dev
+        run: echo "Deploying to MPOne-Dev..."
+
+  # Deployment job for Staging
+  deploy_Staging:
+    needs: build-latest
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'Staging' && github.ref == 'refs/heads/main'}} 
+    steps:
+      - name: Deploy to Staging
+        run: echo "Deploying to Staging..."
+
+  # Deployment job for UAT
+  deploy_UAT:
+    needs: build-latest
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'UAT' && github.ref == 'refs/heads/main'}} 
+    steps:
+      - name: Deploy to UAT
+        run: echo "Deploying to UAT..."
+
+  # Deployment job for Production
+  deploy_Production:
+    needs: build-latest
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'Production' && github.ref == 'refs/heads/main'}}
+    steps:
+      - name: Deploy to Production
+        run: echo "Deploying to Production..."
+
+
+ # deploy:
+  #  needs: build
+  #  runs-on: ubuntu-latest
+   # if: github.ref != 'refs/heads/main' || github.ref == 'refs/heads/main' || ${{ github.event.inputs.environment == 'QA' }} # Condition for QA deployment
+  #  if: ${{ github.event.inputs.environment == 'QA' }}
+  #  steps:
+  #    - name: Deploy to QA
+   #     run: echo "Deploying to QA..."
