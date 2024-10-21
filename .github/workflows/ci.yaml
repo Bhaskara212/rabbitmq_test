@@ -24,7 +24,7 @@ on:
 jobs:
   # Build job triggered automatically on code push
   build:
-    if: github.event_name == 'push'
+    if: github.ref != 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -49,7 +49,7 @@ jobs:
   # Deployment jobs triggered by workflow_dispatch
   deploy_QA:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'QA' }} 
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'QA' }} #&& github.ref == 'refs/heads/main' || github.ref != 'refs/heads/main'
     steps:
       - name: Deploy to QA
         run: echo "Deploying to QA..."
@@ -57,7 +57,7 @@ jobs:
   # Deployment job for Fin-UAT
   deploy_FinUAT:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'Fin-UAT' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'Fin-UAT' }} #&& github.ref == 'refs/heads/main' || github.ref != 'refs/heads/main'
     steps: 
       - name: Deploy to Fin-UAT
         run: echo "Deploying to Fin-UAT..."
@@ -65,7 +65,7 @@ jobs:
   # Deployment job for MPOne-Dev
   deploy_MPOneDev:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'MPOne-Dev' }} 
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'MPOne-Dev'}} #&& github.ref == 'refs/heads/main' || github.ref != 'refs/heads/main' 
     steps:
       - name: Deploy to MPOne-Dev
         run: echo "Deploying to MPOne-Dev..."
