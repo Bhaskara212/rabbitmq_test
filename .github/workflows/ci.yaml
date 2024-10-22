@@ -86,17 +86,26 @@ jobs:
   #     - name: Deploy to UAT
   #       run: echo "Deploying to UAT..."
   
+  # deploy_non-prod:
+  #   runs-on: ubuntu-latest
+  #   if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == ${{ matrix.namespace }} }}
+  #   strategy:
+  #     matrix:
+  #       namespace: [QA, Staging, UAT, Fin-UAT, MPOne-Dev]
+  #   steps:
+  #     - name: Print deployment environment
+  #       run: echo "Deploying to ${{ matrix.namespace }} environment..."
+  #     - name: Deploy to ${{ matrix.namespace }}
+  #       run: echo "Deploying to ${{ matrix.namespace }}..."
+
   deploy_non-prod:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == ${{ matrix.namespace }} }}
-    strategy:
-      matrix:
-        namespace: [QA, Staging, UAT, Fin-UAT, MPOne-Dev]
+    if: ${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.environment == 'Fin-UAT' || github.event.inputs.environment == 'MPOne-Dev' || github.event.inputs.environment == 'QA' || github.event.inputs.environment == 'Staging' || github.event.inputs.environment == 'UAT') }}
     steps:
-      - name: Print deployment environment
-        run: echo "Deploying to ${{ matrix.namespace }} environment..."
-      - name: Deploy to ${{ matrix.namespace }}
-        run: echo "Deploying to ${{ matrix.namespace }}..."
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Deploy to Non-Production
+        run: echo "Deploying to ${{ github.event.inputs.environment }} environment..."
 
   # Deployment job for Production
   deploy_Production:
