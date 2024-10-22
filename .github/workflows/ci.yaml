@@ -47,65 +47,44 @@ jobs:
         run: echo "Saving build artifact..."
 
   # Deployment jobs triggered by workflow_dispatch
-  # deploy_QA:
-  #   runs-on: ubuntu-latest
-  #   if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'QA' }} #&& github.ref == 'refs/heads/main' || github.ref != 'refs/heads/main'
-  #   steps:
-  #     - name: Deploy to QA
-  #       run: echo "Deploying to QA..."
-
-  # # Deployment job for Fin-UAT
-  # deploy_FinUAT:
-  #   runs-on: ubuntu-latest
-  #   if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'Fin-UAT' }} #&& github.ref == 'refs/heads/main' || github.ref != 'refs/heads/main'
-  #   steps: 
-  #     - name: Deploy to Fin-UAT
-  #       run: echo "Deploying to Fin-UAT..."
-
-  # # Deployment job for MPOne-Dev
-  # deploy_MPOneDev:
-  #   runs-on: ubuntu-latest
-  #   if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'MPOne-Dev'}} #&& github.ref == 'refs/heads/main' || github.ref != 'refs/heads/main' 
-  #   steps:
-  #     - name: Deploy to MPOne-Dev
-  #       run: echo "Deploying to MPOne-Dev..."
-
-  # # Deployment job for Staging
-  # deploy_Staging:
-  #   runs-on: ubuntu-latest
-  #   if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'Staging' }} 
-  #   steps:
-  #     - name: Deploy to Staging
-  #       run: echo "Deploying to Staging..."
-
-  # # Deployment job for UAT
-  # deploy_UAT:
-  #   runs-on: ubuntu-latest
-  #   if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'UAT' }} 
-  #   steps:
-  #     - name: Deploy to UAT
-  #       run: echo "Deploying to UAT..."
-  
-  # deploy_non-prod:
-  #   runs-on: ubuntu-latest
-  #   if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == ${{ matrix.namespace }} }}
-  #   strategy:
-  #     matrix:
-  #       namespace: [QA, Staging, UAT, Fin-UAT, MPOne-Dev]
-  #   steps:
-  #     - name: Print deployment environment
-  #       run: echo "Deploying to ${{ matrix.namespace }} environment..."
-  #     - name: Deploy to ${{ matrix.namespace }}
-  #       run: echo "Deploying to ${{ matrix.namespace }}..."
-
-  deploy_non-prod:
+  deploy_QA:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.environment == 'Fin-UAT' || github.event.inputs.environment == 'MPOne-Dev' || github.event.inputs.environment == 'QA' || github.event.inputs.environment == 'Staging' || github.event.inputs.environment == 'UAT') }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'QA' }} #&& github.ref == 'refs/heads/main' || github.ref != 'refs/heads/main'
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Deploy to Non-Production
-        run: echo "Deploying to ${{ github.event.inputs.environment }} environment..."
+      - name: Deploy to QA
+        run: echo "Deploying to QA..."
+
+  # Deployment job for Fin-UAT
+  deploy_FinUAT:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'Fin-UAT' }} #&& github.ref == 'refs/heads/main' || github.ref != 'refs/heads/main'
+    steps: 
+      - name: Deploy to Fin-UAT
+        run: echo "Deploying to Fin-UAT..."
+
+  # Deployment job for MPOne-Dev
+  deploy_MPOneDev:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'MPOne-Dev'}} #&& github.ref == 'refs/heads/main' || github.ref != 'refs/heads/main' 
+    steps:
+      - name: Deploy to MPOne-Dev
+        run: echo "Deploying to MPOne-Dev..."
+
+  # Deployment job for Staging
+  deploy_Staging:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'Staging' }} 
+    steps:
+      - name: Deploy to Staging
+        run: echo "Deploying to Staging..."
+
+  # Deployment job for UAT
+  deploy_UAT:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'UAT' }} 
+    steps:
+      - name: Deploy to UAT
+        run: echo "Deploying to UAT..."
 
   # Deployment job for Production
   deploy_Production:
