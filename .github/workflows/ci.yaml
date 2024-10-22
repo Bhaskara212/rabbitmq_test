@@ -88,23 +88,15 @@ jobs:
   
   deploy_non-prod:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == '${{ matrix.namespace }}' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment != 'Production' }}
     strategy:
-        matrix:
-          namespace: [staging, uat, qa, fin-uat, mpone-dev]
-          include:
-            - namespace: staging
-            
-            - namespace: uat
-            
-            - namespace: qa
-            
-            - namespace: fin-uat
-            
-            - namespace: mpone-dev
+      matrix:
+        namespace: [QA, Staging, UAT, Fin-UAT, MPOne-Dev]
     steps:
       - name: Print deployment environment
         run: echo "Deploying to ${{ matrix.namespace }} environment..."
+      - name: Deploy to ${{ matrix.namespace }}
+        run: echo "Deploying to ${{ matrix.namespace }}..."
 
   # Deployment job for Production
   deploy_Production:
