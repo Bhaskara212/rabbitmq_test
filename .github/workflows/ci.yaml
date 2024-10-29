@@ -1,0 +1,95 @@
+name: Build and Deploy Workflow
+
+# Trigger the build job on push
+on:
+  push:
+    branches:
+      - main
+      - feature-**
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Select environment to deploy'
+        required: true
+        default: 'QA'
+        type: choice
+        options:
+          - Fin-UAT
+          - MPOne-Dev
+          - QA
+          - Staging
+          - UAT
+          - Production
+
+jobs:
+  # Build job triggered automatically on code push
+  build:
+    if: github.ref != 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Build Application
+        run: echo "Building application..."
+      - name: Save build artifact
+        run: echo "Saving build artifact..."  # Simulate saving the artifact
+        # Optionally add artifact upload step for real build output
+
+  build-latest:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Build Application
+        run: echo "Building application..."
+      - name: Save build artifact
+        run: echo "Saving build artifact..."
+
+  # Deployment jobs triggered by workflow_dispatch
+  deploy_QA:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'QA' }} #&& github.ref == 'refs/heads/main' || github.ref != 'refs/heads/main'
+    steps:
+      - name: Deploy to QA
+        run: echo "Deploying to QA..."
+
+  # Deployment job for Fin-UAT
+  deploy_FinUAT:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'Fin-UAT' }} #&& github.ref == 'refs/heads/main' || github.ref != 'refs/heads/main'
+    steps: 
+      - name: Deploy to Fin-UAT
+        run: echo "Deploying to Fin-UAT..."
+
+  # Deployment job for MPOne-Dev
+  deploy_MPOneDev:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'MPOne-Dev'}} #&& github.ref == 'refs/heads/main' || github.ref != 'refs/heads/main' 
+    steps:
+      - name: Deploy to MPOne-Dev
+        run: echo "Deploying to MPOne-Dev..."
+
+  # Deployment job for Staging
+  deploy_Staging:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'Staging' }} 
+    steps:
+      - name: Deploy to Staging
+        run: echo "Deploying to Staging..."
+
+  # Deployment job for UAT
+  deploy_UAT:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'UAT' }} 
+    steps:
+      - name: Deploy to UAT
+        run: echo "Deploying to UAT..."
+
+  # Deployment job for Production
+  deploy_Production:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'Production' && github.ref == 'refs/heads/main' }}
+    steps:
+      - name: Deploy to Production
+        run: echo "Deploying to Production..."
