@@ -1,95 +1,40 @@
-name: Build and Deploy Workflow
+name: 'Push protein paint image'
 
-# Trigger the build job on push
 on:
-  push:
-    branches:
-      - main
-      - feature-**
   workflow_dispatch:
     inputs:
-      environment:
-        description: 'Select environment to deploy'
+      branch:
+        description: 'Branch name to build the image from'
         required: true
-        default: 'QA'
-        type: choice
-        options:
-          - Fin-UAT
-          - MPOne-Dev
-          - QA
-          - Staging
-          - UAT
-          - Production
+        default: 'feature-01'
 
 jobs:
-  # Build job triggered automatically on code push
-  build:
-    if: github.ref != 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Build Application
-        run: echo "Building application..."
-      - name: Save build artifact
-        run: echo "Saving build artifact..."  # Simulate saving the artifact
-        # Optionally add artifact upload step for real build output
+  build-and-push-image_to_acr:
+    runs-on: self-hosted
 
-  build-latest:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Build Application
-        run: echo "Building application..."
-      - name: Save build artifact
-        run: echo "Saving build artifact..."
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.inputs.branch }}
 
-  # Deployment jobs triggered by workflow_dispatch
-  deploy_QA:
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'QA' }} #&& github.ref == 'refs/heads/main' || github.ref != 'refs/heads/main'
-    steps:
-      - name: Deploy to QA
-        run: echo "Deploying to QA..."
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
 
-  # Deployment job for Fin-UAT
-  deploy_FinUAT:
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'Fin-UAT' }} #&& github.ref == 'refs/heads/main' || github.ref != 'refs/heads/main'
-    steps: 
-      - name: Deploy to Fin-UAT
-        run: echo "Deploying to Fin-UAT..."
+    - name: Cache Docker layers
+      uses: actions/cache@v2
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
 
-  # Deployment job for MPOne-Dev
-  deploy_MPOneDev:
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'MPOne-Dev'}} #&& github.ref == 'refs/heads/main' || github.ref != 'refs/heads/main' 
-    steps:
-      - name: Deploy to MPOne-Dev
-        run: echo "Deploying to MPOne-Dev..."
+    - name: Log in to Azure Container Registry (ACR)
+      uses: azure/docker-login@v1
+      with:
+        username: ${{ secrets.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PASSWORD }}
 
-  # Deployment job for Staging
-  deploy_Staging:
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'Staging' }} 
-    steps:
-      - name: Deploy to Staging
-        run: echo "Deploying to Staging..."
-
-  # Deployment job for UAT
-  deploy_UAT:
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'UAT' }} 
-    steps:
-      - name: Deploy to UAT
-        run: echo "Deploying to UAT..."
-
-  # Deployment job for Production
-  deploy_Production:
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'Production' && github.ref == 'refs/heads/main' }}
-    steps:
-      - name: Deploy to Production
-        run: echo "Deploying to Production..."
+    - name: Build and push image to ACR
+      run: |
+        docker buildx build --push --tag ${{ secrets.ACR_REGISTRY_URL }}/protein-paint:${{ github.event.inputs.branch }} .
