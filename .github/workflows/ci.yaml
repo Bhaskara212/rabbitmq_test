@@ -26,8 +26,8 @@ jobs:
           CLUSTER="${{ github.event.inputs.cluster }}"
           NAMESPACE="${{ github.event.inputs.namespace }}"
 
-          NON_PROD_NAMESPACES=("dev" "qa" "staging")
-          PROD_NAMESPACES=("prod" "rabbitmq-prod")
+          NON_PROD_NAMESPACES=("uat" "qa" "staging")
+          PROD_NAMESPACES=("production")
 
           if [[ "$CLUSTER" == "non-prod" ]]; then
             if [[ ! " ${NON_PROD_NAMESPACES[@]} " =~ " ${NAMESPACE} " ]]; then
