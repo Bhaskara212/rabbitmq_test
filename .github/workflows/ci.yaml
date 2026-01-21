@@ -12,50 +12,50 @@ on:
           - production
 
       namespace:
-        description: "Kubernetes namespace"
+        description: "Namespace (must belong to selected cluster)"
         required: true
         type: string
+
+env:
+  NON_PROD_NAMESPACES: "uat qa staging"
+  PROD_NAMESPACES: "production"
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Validate namespace for selected cluster
+      - name: Resolve and validate namespace (Driven variable)
         run: |
           CLUSTER="${{ github.event.inputs.cluster }}"
           NAMESPACE="${{ github.event.inputs.namespace }}"
 
-          NON_PROD_NAMESPACES=("uat" "qa" "staging")
-          PROD_NAMESPACES=("production")
-
           if [[ "$CLUSTER" == "non-prod" ]]; then
-            if [[ ! " ${NON_PROD_NAMESPACES[@]} " =~ " ${NAMESPACE} " ]]; then
-              echo "❌ Namespace '$NAMESPACE' is NOT allowed for non-prod"
-              exit 1
-            fi
+            ALLOWED_NAMESPACES="$NON_PROD_NAMESPACES"
+          elif [[ "$CLUSTER" == "production" ]]; then
+            ALLOWED_NAMESPACES="$PROD_NAMESPACES"
+          else
+            echo "❌ Invalid cluster"
+            exit 1
           fi
 
-          if [[ "$CLUSTER" == "production" ]]; then
-            if [[ ! " ${PROD_NAMESPACES[@]} " =~ " ${NAMESPACE} " ]]; then
-              echo "❌ Namespace '$NAMESPACE' is NOT allowed for production"
-              exit 1
-            fi
+          if [[ ! " $ALLOWED_NAMESPACES " =~ " $NAMESPACE " ]]; then
+            echo "❌ Namespace '$NAMESPACE' is not allowed for cluster '$CLUSTER'"
+            echo "Allowed namespaces: $ALLOWED_NAMESPACES"
+            exit 1
           fi
 
-          echo "✅ Namespace validation passed"
+          # Driven namespace variable (available everywhere)
+          echo "DEPLOY_NAMESPACE=$NAMESPACE" >> $GITHUB_ENV
+
+          echo "✅ Namespace resolved: $DEPLOY_NAMESPACE"
 
       - name: Deploy RabbitMQ via ArgoCD
         run: |
           echo "🚀 Deploying RabbitMQ"
           echo "Cluster: ${{ github.event.inputs.cluster }}"
-          echo "Namespace: ${{ github.event.inputs.namespace }}"
+          echo "Namespace: $DEPLOY_NAMESPACE"
 
-          # Example argocd command
+          # Example:
           # argocd app create rabbitmq \
-          #   --dest-server https://kubernetes.default.svc \
-          #   --dest-namespace ${{ github.event.inputs.namespace }} \
-          #   --repo https://github.com/org/repo.git \
-          #   --path rabbitmq \
-          #   --revision main
-
+          #   --dest-namespace $DEPLOY_NAMESPACE
