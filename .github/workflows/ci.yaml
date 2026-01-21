@@ -1,40 +1,61 @@
-name: 'Push protein paint image'
+name: Deploy RabbitMQ via ArgoCD (Test)
 
 on:
   workflow_dispatch:
     inputs:
-      branch:
-        description: 'Branch name to build the image from'
+      cluster:
+        description: "ArgoCD cluster name"
         required: true
-        default: 'feature-01'
+        type: choice
+        options:
+          - non-prod
+          - production
+
+      namespace:
+        description: "Kubernetes namespace"
+        required: true
+        type: string
 
 jobs:
-  build-and-push-image_to_acr:
-    runs-on: self-hosted
+  deploy:
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
-      with:
-        ref: ${{ github.event.inputs.branch }}
+      - name: Validate namespace for selected cluster
+        run: |
+          CLUSTER="${{ github.event.inputs.cluster }}"
+          NAMESPACE="${{ github.event.inputs.namespace }}"
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+          NON_PROD_NAMESPACES=("dev" "qa" "staging")
+          PROD_NAMESPACES=("prod" "rabbitmq-prod")
 
-    - name: Cache Docker layers
-      uses: actions/cache@v2
-      with:
-        path: /tmp/.buildx-cache
-        key: ${{ runner.os }}-buildx-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-buildx-
+          if [[ "$CLUSTER" == "non-prod" ]]; then
+            if [[ ! " ${NON_PROD_NAMESPACES[@]} " =~ " ${NAMESPACE} " ]]; then
+              echo "❌ Namespace '$NAMESPACE' is NOT allowed for non-prod"
+              exit 1
+            fi
+          fi
 
-    - name: Log in to Azure Container Registry (ACR)
-      uses: azure/docker-login@v1
-      with:
-        username: ${{ secrets.ACR_USERNAME }}
-        password: ${{ secrets.ACR_PASSWORD }}
+          if [[ "$CLUSTER" == "production" ]]; then
+            if [[ ! " ${PROD_NAMESPACES[@]} " =~ " ${NAMESPACE} " ]]; then
+              echo "❌ Namespace '$NAMESPACE' is NOT allowed for production"
+              exit 1
+            fi
+          fi
 
-    - name: Build and push image to ACR
-      run: |
-        docker buildx build --push --tag ${{ secrets.ACR_REGISTRY_URL }}/protein-paint:${{ github.event.inputs.branch }} .
+          echo "✅ Namespace validation passed"
+
+      - name: Deploy RabbitMQ via ArgoCD
+        run: |
+          echo "🚀 Deploying RabbitMQ"
+          echo "Cluster: ${{ github.event.inputs.cluster }}"
+          echo "Namespace: ${{ github.event.inputs.namespace }}"
+
+          # Example argocd command
+          # argocd app create rabbitmq \
+          #   --dest-server https://kubernetes.default.svc \
+          #   --dest-namespace ${{ github.event.inputs.namespace }} \
+          #   --repo https://github.com/org/repo.git \
+          #   --path rabbitmq \
+          #   --revision main
+
