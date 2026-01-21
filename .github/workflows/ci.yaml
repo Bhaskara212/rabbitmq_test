@@ -12,50 +12,52 @@ on:
           - production
 
       namespace:
-        description: "Namespace (must belong to selected cluster)"
+        description: "Namespace (see available namespaces in summary)"
         required: true
         type: string
-
-env:
-  NON_PROD_NAMESPACES: "uat qa staging"
-  PROD_NAMESPACES: "production"
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Resolve and validate namespace (Driven variable)
+      - name: Display available namespaces (Workspace)
         run: |
           CLUSTER="${{ github.event.inputs.cluster }}"
-          NAMESPACE="${{ github.event.inputs.namespace }}"
 
           if [[ "$CLUSTER" == "non-prod" ]]; then
-            ALLOWED_NAMESPACES="$NON_PROD_NAMESPACES"
-          elif [[ "$CLUSTER" == "production" ]]; then
-            ALLOWED_NAMESPACES="$PROD_NAMESPACES"
+            NAMESPACES="${{ vars.NON_PROD_NAMESPACES }}"
           else
-            echo "❌ Invalid cluster"
+            NAMESPACES="${{ vars.PROD_NAMESPACES }}"
+          fi
+
+          echo "### 📦 Available Namespaces for **$CLUSTER**" >> $GITHUB_STEP_SUMMARY
+          for ns in $NAMESPACES; do
+            echo "- \`$ns\`" >> $GITHUB_STEP_SUMMARY
+          done
+
+      - name: Resolve and validate namespace
+        run: |
+          CLUSTER="${{ github.event.inputs.cluster }}"
+          INPUT_NAMESPACE="${{ github.event.inputs.namespace }}"
+
+          if [[ "$CLUSTER" == "non-prod" ]]; then
+            ALLOWED="${{ vars.NON_PROD_NAMESPACES }}"
+          else
+            ALLOWED="${{ vars.PROD_NAMESPACES }}"
+          fi
+
+          if [[ ! " $ALLOWED " =~ " $INPUT_NAMESPACE " ]]; then
+            echo "❌ Invalid namespace: $INPUT_NAMESPACE"
             exit 1
           fi
 
-          if [[ ! " $ALLOWED_NAMESPACES " =~ " $NAMESPACE " ]]; then
-            echo "❌ Namespace '$NAMESPACE' is not allowed for cluster '$CLUSTER'"
-            echo "Allowed namespaces: $ALLOWED_NAMESPACES"
-            exit 1
-          fi
+          echo "DEPLOY_NAMESPACE=$INPUT_NAMESPACE" >> $GITHUB_ENV
 
-          # Driven namespace variable (available everywhere)
-          echo "DEPLOY_NAMESPACE=$NAMESPACE" >> $GITHUB_ENV
-
-          echo "✅ Namespace resolved: $DEPLOY_NAMESPACE"
+          echo "### ✅ Selected Deployment Details" >> $GITHUB_STEP_SUMMARY
+          echo "- Cluster: **$CLUSTER**" >> $GITHUB_STEP_SUMMARY
+          echo "- Namespace: **$INPUT_NAMESPACE**" >> $GITHUB_STEP_SUMMARY
 
       - name: Deploy RabbitMQ via ArgoCD
         run: |
-          echo "🚀 Deploying RabbitMQ"
-          echo "Cluster: ${{ github.event.inputs.cluster }}"
-          echo "Namespace: $DEPLOY_NAMESPACE"
-
-          # Example:
-          # argocd app create rabbitmq \
-          #   --dest-namespace $DEPLOY_NAMESPACE
+          echo "🚀 Deploying RabbitMQ to $DEPLOY_NAMESPACE"
