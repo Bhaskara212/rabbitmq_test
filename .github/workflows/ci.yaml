@@ -39,11 +39,13 @@ jobs:
 
           echo "DEPLOY_NAMESPACE=$NS" >> $GITHUB_ENV
 
-      - name: Trigger deploy workflow in Repo-B
+      - name: Trigger deploy job in Repo-B
+        env:
+          GH_TOKEN: ${{ secrets.REPO_DISPATCH_TOKEN }}
         run: |
           curl -X POST \
             -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${{ secrets.REPO_DISPATCH_TOKEN }}" \
+            -H "Authorization: token $GH_TOKEN" \
             https://api.github.com/repos/Bhaskara212/Dummy-for-testing/dispatches \
             -d '{
               "event_type": "deploy-rabbitmq",
@@ -52,3 +54,4 @@ jobs:
                 "namespace": "${{ env.DEPLOY_NAMESPACE }}"
               }
             }'
+
