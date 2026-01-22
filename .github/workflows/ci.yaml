@@ -1,10 +1,10 @@
-name: Deploy RabbitMQ via ArgoCD (Test)
+name: Trigger RabbitMQ Deployment
 
 on:
   workflow_dispatch:
     inputs:
       cluster:
-        description: "ArgoCD cluster name"
+        description: "Target cluster"
         required: true
         type: choice
         options:
@@ -12,52 +12,43 @@ on:
           - production
 
       namespace:
-        description: "Namespace (see available namespaces in summary)"
+        description: "Target namespace"
         required: true
         type: string
 
 jobs:
-  deploy:
+  trigger:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Display available namespaces (Workspace)
+      - name: Validate namespace
         run: |
           CLUSTER="${{ github.event.inputs.cluster }}"
+          NS="${{ github.event.inputs.namespace }}"
 
           if [[ "$CLUSTER" == "non-prod" ]]; then
-            NAMESPACES="${{ vars.NON_PROD_NAMESPACES }}"
+            ALLOWED="uat qa staging"
           else
-            NAMESPACES="${{ vars.PROD_NAMESPACES }}"
+            ALLOWED="production"
           fi
 
-          echo "### 📦 Available Namespaces for **$CLUSTER**" >> $GITHUB_STEP_SUMMARY
-          for ns in $NAMESPACES; do
-            echo "- \`$ns\`" >> $GITHUB_STEP_SUMMARY
-          done
-
-      - name: Resolve and validate namespace
-        run: |
-          CLUSTER="${{ github.event.inputs.cluster }}"
-          INPUT_NAMESPACE="${{ github.event.inputs.namespace }}"
-
-          if [[ "$CLUSTER" == "non-prod" ]]; then
-            ALLOWED="${{ vars.NON_PROD_NAMESPACES }}"
-          else
-            ALLOWED="${{ vars.PROD_NAMESPACES }}"
-          fi
-
-          if [[ ! " $ALLOWED " =~ " $INPUT_NAMESPACE " ]]; then
-            echo "❌ Invalid namespace: $INPUT_NAMESPACE"
+          if [[ ! " $ALLOWED " =~ " $NS " ]]; then
+            echo "❌ Invalid namespace '$NS' for cluster '$CLUSTER'"
             exit 1
           fi
 
-          echo "DEPLOY_NAMESPACE=$INPUT_NAMESPACE" >> $GITHUB_ENV
+          echo "DEPLOY_NAMESPACE=$NS" >> $GITHUB_ENV
 
-          echo "### ✅ Selected Deployment Details" >> $GITHUB_STEP_SUMMARY
-          echo "- Cluster: **$CLUSTER**" >> $GITHUB_STEP_SUMMARY
-          echo "- Namespace: **$INPUT_NAMESPACE**" >> $GITHUB_STEP_SUMMARY
-
-      - name: Deploy RabbitMQ via ArgoCD
+      - name: Trigger deploy workflow in Repo-B
         run: |
-          echo "🚀 Deploying RabbitMQ to $DEPLOY_NAMESPACE"
+          curl -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.REPO_DISPATCH_TOKEN }}" \
+            https://api.github.com/repos/Bhaskara212/Dummy-for-testing/dispatches \
+            -d '{
+              "event_type": "deploy-rabbitmq",
+              "client_payload": {
+                "cluster": "${{ github.event.inputs.cluster }}",
+                "namespace": "${{ env.DEPLOY_NAMESPACE }}"
+              }
+            }'
